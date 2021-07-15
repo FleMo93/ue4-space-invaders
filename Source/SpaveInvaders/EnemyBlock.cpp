@@ -91,7 +91,11 @@ void AEnemyBlock::Tick(float DeltaTime)
 
 void AEnemyBlock::OnEnemyDestroyed(AEnemy *Enemy)
 {
-	Enemies.Remove(Enemy);
+	int32 RemovedEnemiesCount = Enemies.RemoveSwap(Enemy);
+
+	if (RemovedEnemiesCount == 0)
+		return;
+
 	if (Enemies.Num() >= 0)
 	{
 		if (Enemy == MostLeftEnemy)
@@ -127,6 +131,7 @@ void AEnemyBlock::SpawnBlock(FVector SpawnPosition, int Columns, int Rows, TSubc
 		SpawnPosition.Z -= RowOffset;
 	}
 
+	Enemies.Shrink();
 	MostLeftEnemy = GetMostLeftEnemy();
 	MostRightEnemy = GetMostRightEnemy();
 	Alive = true;
