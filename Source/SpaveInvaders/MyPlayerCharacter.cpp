@@ -13,8 +13,8 @@ AMyPlayerCharacter::AMyPlayerCharacter()
 	auto ActorXLocation = GetActorLocation().X;
 	auto MyCapsuleComponent = Cast<UCapsuleComponent>(GetComponentByClass(UCapsuleComponent::StaticClass()));
 	auto CapsuleRadius = MyCapsuleComponent->GetScaledCapsuleRadius();
-	LeftBound = ActorXLocation - CapsuleRadius;
-	RightBound = ActorXLocation + CapsuleRadius;
+	LeftBound = -CapsuleRadius;
+	RightBound = CapsuleRadius;
 }
 
 void AMyPlayerCharacter::PrintString(FString Text)
@@ -45,11 +45,13 @@ void AMyPlayerCharacter::CheckLocation()
 	{
 		FVector NewLocation = FVector(RightAreaBound - RightBound, CurrentLocation.Y, CurrentLocation.Z);
 		SetActorLocation(NewLocation);
+		CharacterMovementComponent->StopMovementImmediately();
 	}
 	else if (CurrentLocation.X - LeftBound < LeftAreaBound)
 	{
 		FVector NewLocation = FVector(LeftAreaBound + LeftBound, CurrentLocation.Y, CurrentLocation.Z);
 		SetActorLocation(NewLocation);
+		CharacterMovementComponent->StopMovementImmediately();
 	}
 }
 
