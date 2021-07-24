@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "GameFramework/Actor.h"
 #include "Math/Vector.h"
 #include "Containers/Array.h"
 #include "Enemy.h"
@@ -17,7 +17,7 @@ enum MovementDirection
 };
 
 UCLASS()
-class SPAVEINVADERS_API AEnemyBlock : public APawn
+class SPAVEINVADERS_API AEnemyBlock : public AActor
 {
 	GENERATED_BODY()
 
