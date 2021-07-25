@@ -22,7 +22,7 @@ void AMyPlayerCharacter::PrintString(FString Text)
 	if (!GEngine)
 		return;
 
-	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Yellow, Text);
+	GEngine->AddOnScreenDebugMessage(-1, 0.2f, FColor::Yellow, Text);
 }
 
 // Called when the game starts or when spawned
@@ -39,6 +39,13 @@ void AMyPlayerCharacter::MoveByAxis(float AxisValue)
 
 void AMyPlayerCharacter::CheckLocation()
 {
+	if (!HasLocalNetOwner() || !HasAuthority())
+	{
+		return;
+	}
+
+	PrintString("Call");
+
 	auto CurrentLocation = GetActorLocation();
 
 	if (CurrentLocation.X + RightBound > RightAreaBound)

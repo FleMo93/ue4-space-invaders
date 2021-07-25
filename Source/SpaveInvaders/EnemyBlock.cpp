@@ -43,13 +43,8 @@ AEnemy *AEnemyBlock::GetMostRightEnemy()
 	return MostRight;
 }
 
-void AEnemyBlock::Tick(float DeltaTime)
+void AEnemyBlock::MoveEnemies_Implementation(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-
-	if (!Alive || MyWorld->IsPaused())
-		return;
-
 	bool MoveDown = false;
 	float Movement = CurrentMovementSpeed * DeltaTime;
 	FVector MostLeftLocation = MostLeftEnemy->GetActorLocation();
@@ -79,7 +74,7 @@ void AEnemyBlock::Tick(float DeltaTime)
 		FVector Location = Enemy->GetActorLocation();
 		Location.X += Movement;
 
-		if(MoveDown)
+		if (MoveDown)
 			Location.Z -= RowHeightMovement;
 
 		Enemy->SetActorLocation(Location);
@@ -87,6 +82,17 @@ void AEnemyBlock::Tick(float DeltaTime)
 
 	if (MoveDown)
 		CurrentMovementSpeed += MovementSpeedIncrease;
+}
+
+void AEnemyBlock::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (!Alive || MyWorld->IsPaused())
+		return;
+
+	if(GetNetMode() != ENetMode::NM_Client)
+		MoveEnemies(DeltaTime);
 }
 
 void AEnemyBlock::OnEnemyDestroyed(AEnemy *Enemy)
@@ -117,7 +123,7 @@ void AEnemyBlock::SpawnBlock(FVector SpawnPosition, int Columns, int Rows, TSubc
 	{
 		for (int32 x = 0; x < Columns; x++)
 		{
-			AEnemy* Enemy = MyWorld->SpawnActor<AEnemy>(*EnemyType);
+			AEnemy *Enemy = MyWorld->SpawnActor<AEnemy>(*EnemyType);
 			Enemy->SetActorLocation(SpawnPosition, false, nullptr, ETeleportType::TeleportPhysics);
 
 			MyOnEnemyDestroyed.BindUFunction(this, "OnEnemyDestroyed");

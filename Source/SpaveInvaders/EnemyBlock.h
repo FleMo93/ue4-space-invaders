@@ -7,6 +7,7 @@
 #include "Math/Vector.h"
 #include "Containers/Array.h"
 #include "Enemy.h"
+#include "Net/UnrealNetwork.h"
 #include "EnemyBlock.generated.h"
 
 UENUM(BlueprintType)
@@ -61,6 +62,9 @@ public:
 private:
 	AEnemy* GetMostLeftEnemy();
 	AEnemy* GetMostRightEnemy();
+
+	UFUNCTION(Server, Unreliable)
+	void MoveEnemies(float DeltaTime);
 
 protected:
 	virtual void BeginPlay() override;
