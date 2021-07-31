@@ -46,7 +46,7 @@ AEnemy *AEnemyBlock::GetMostRightEnemy()
 void AEnemyBlock::MoveEnemies_Implementation(float DeltaTime)
 {
 	bool MoveDown = false;
-	float Movement = CurrentMovementSpeed * DeltaTime;
+	// float Movement = CurrentMovementSpeed * DeltaTime;
 	FVector MostLeftLocation = MostLeftEnemy->GetActorLocation();
 	FVector MostRightLocation = MostRightEnemy->GetActorLocation();
 
@@ -61,23 +61,26 @@ void AEnemyBlock::MoveEnemies_Implementation(float DeltaTime)
 		MoveDown = true;
 	}
 
-	if (CurrentMovementDirection == MovementDirection::Left)
-		Movement *= -1;
+	// if (CurrentMovementDirection == MovementDirection::Left)
+	// 	Movement *= -1;
 
-	if (CurrentMovementDirection == MovementDirection::Left && MostLeftLocation.X + Movement <= LeftBound)
-		Movement = -(MostLeftLocation.X - LeftBound);
-	else if (CurrentMovementDirection == MovementDirection::Right && MostRightLocation.X + Movement >= RightBound)
-		Movement = RightBound - MostRightLocation.X;
+	// if (CurrentMovementDirection == MovementDirection::Left && MostLeftLocation.X + Movement <= LeftBound)
+	// 	Movement = -(MostLeftLocation.X - LeftBound);
+	// else if (CurrentMovementDirection == MovementDirection::Right && MostRightLocation.X + Movement >= RightBound)
+	// 	Movement = RightBound - MostRightLocation.X;
 
 	for (AEnemy *Enemy : Enemies)
 	{
 		FVector Location = Enemy->GetActorLocation();
-		Location.X += Movement;
+		// Location.X += Movement;
 
-		if (MoveDown)
+		if (MoveDown) {
 			Location.Z -= RowHeightMovement;
+			Enemy->SetActorLocation(Location);
+		}
 
-		Enemy->SetActorLocation(Location);
+		FVector Movement = FVector(CurrentMovementDirection == MovementDirection::Left ? -1 : 1, 0, 0);
+		Enemy->AddMovementInput(FVector(1, 0, 0));
 	}
 
 	if (MoveDown)

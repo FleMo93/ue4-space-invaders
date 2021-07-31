@@ -23,11 +23,11 @@ public:
 	float RightAreaBound = 100;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float LeftAreaBound = -100;
-	
+
 	float LeftBound = 0;
 	float RightBound = 0;
 	float InputAxisValue = 0;
-	UCharacterMovementComponent* CharacterMovementComponent;
+	UCharacterMovementComponent *CharacterMovementComponent;
 
 private:
 	void PrintString(FString Text);
@@ -37,12 +37,12 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
 
 	/**
 		Moves the character around the axis value. Only runs on the owner and server.

@@ -44,8 +44,6 @@ void AMyPlayerCharacter::CheckLocation()
 		return;
 	}
 
-	PrintString("Call");
-
 	auto CurrentLocation = GetActorLocation();
 
 	if (CurrentLocation.X + RightBound > RightAreaBound)

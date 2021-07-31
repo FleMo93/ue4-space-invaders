@@ -3,11 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Enemy.generated.h"
 
 UCLASS()
-class SPAVEINVADERS_API AEnemy : public APawn
+class SPAVEINVADERS_API AEnemy : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -18,7 +19,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	virtual void Tick(float DeltaTime) override;
 	void Shoot();
 };
