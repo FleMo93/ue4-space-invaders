@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "Math/Vector.h"
 #include "Containers/Array.h"
-#include "Enemy.h"
 #include "Net/UnrealNetwork.h"
 #include "EnemyBlock.generated.h"
 
@@ -23,11 +22,11 @@ class SPAVEINVADERS_API AEnemyBlock : public AActor
 	GENERATED_BODY()
 
 private:
-	TArray<AEnemy*> Enemies;
+	TArray<AActor*> Enemies;
 	bool Alive = false;
 	UWorld* MyWorld;
-	AEnemy* MostLeftEnemy;
-	AEnemy* MostRightEnemy;
+	AActor* MostLeftEnemy;
+	AActor* MostRightEnemy;
 	FScriptDelegate MyOnEnemyDestroyed;
 	TEnumAsByte<MovementDirection> CurrentMovementDirection = InitialMovementDirection;
 	float CurrentMovementSpeed = MovementSpeed;
@@ -60,8 +59,8 @@ public:
 	float RowHeightMovement = 100;
 
 private:
-	AEnemy* GetMostLeftEnemy();
-	AEnemy* GetMostRightEnemy();
+	AActor* GetMostLeftEnemy();
+	AActor* GetMostRightEnemy();
 
 	UFUNCTION(Server, Unreliable)
 	void MoveEnemies(float DeltaTime);
@@ -73,8 +72,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Spawn")
-	void SpawnBlock(FVector SpawnPosition, int Columns, int Rows, TSubclassOf<AEnemy> EnemyType);
+	void SpawnBlock(FVector SpawnPosition, int Columns, int Rows, TSubclassOf<AActor> EnemyType);
 
 	UFUNCTION()
-	void OnEnemyDestroyed(AEnemy* Enemy);
+	void OnEnemyDestroyed(AActor* Enemy);
 };
