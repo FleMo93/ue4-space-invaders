@@ -3,10 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/Character.h"
 #include "GameFramework/Actor.h"
 #include "Math/Vector.h"
 #include "Containers/Array.h"
 #include "Net/UnrealNetwork.h"
+#include "BaseEnemy.h"
 #include "EnemyBlock.generated.h"
 
 UENUM(BlueprintType)
@@ -17,34 +19,26 @@ enum MovementDirection
 };
 
 UCLASS()
-class SPAVEINVADERS_API AEnemyBlock : public AActor
+class SPAVEINVADERS_API AEnemyBlock : public ACharacter
 {
 	GENERATED_BODY()
 
 private:
-	TArray<AActor*> Enemies;
+	TArray<ABaseEnemy *> Enemies;
 	bool Alive = false;
-	UWorld* MyWorld;
-	AActor* MostLeftEnemy;
-	AActor* MostRightEnemy;
+	UWorld *MyWorld;
 	FScriptDelegate MyOnEnemyDestroyed;
-	TEnumAsByte<MovementDirection> CurrentMovementDirection = InitialMovementDirection;
+	TEnumAsByte<MovementDirection> CurrentMovementDirection;
 	float CurrentMovementSpeed = MovementSpeed;
 
 public:
 	AEnemyBlock();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bound Area")
-	float LeftBound = 100;
+	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Behaviour")
+	float LeftBound = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bound Area")
-	float RightBound = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn")
-	float ColumnOffset = 150;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn")
-	float RowOffset = 150;
+	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Behaviour")
+	float RightBound = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behaviour")
 	float MovementSpeed = 100;
@@ -59,11 +53,8 @@ public:
 	float RowHeightMovement = 100;
 
 private:
-	AActor* GetMostLeftEnemy();
-	AActor* GetMostRightEnemy();
-
 	UFUNCTION(Server, Unreliable)
-	void MoveEnemies(float DeltaTime);
+	void MoveBlock();
 
 protected:
 	virtual void BeginPlay() override;
@@ -71,9 +62,6 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION(BlueprintCallable, Category = "Spawn")
-	void SpawnBlock(FVector SpawnPosition, int Columns, int Rows, TSubclassOf<AActor> EnemyType);
-
 	UFUNCTION()
-	void OnEnemyDestroyed(AActor* Enemy);
+	void OnEnemyDestroyed(ABaseEnemy *Enemy);
 };

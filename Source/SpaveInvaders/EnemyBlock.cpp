@@ -9,79 +9,51 @@ AEnemyBlock::AEnemyBlock()
 
 void AEnemyBlock::BeginPlay()
 {
-	MyWorld = GetWorld();
 	Super::BeginPlay();
+	MyWorld = GetWorld();
+	CurrentMovementDirection = InitialMovementDirection;
+	FString Message = "Move: " + FString::SanitizeFloat(InitialMovementDirection);
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
+	Alive = true;
 }
 
-AActor *AEnemyBlock::GetMostLeftEnemy()
+void AEnemyBlock::MoveBlock_Implementation()
 {
-	AActor *MostLeft = NULL;
+	FVector Origin, Extend;
+	GetActorBounds(true, Origin, Extend, true);
+	auto Location = GetActorLocation();
 
-	for (AActor *Enemy : Enemies)
+
+	if (CurrentMovementDirection == Left)
 	{
-		if (MostLeft == NULL)
-			MostLeft = Enemy;
-		else if (Enemy->GetActorLocation().X < MostLeft->GetActorLocation().X)
-			MostLeft = Enemy;
+		float LeftPosition = Origin.X - (Extend.X / 2);
+		if (LeftPosition <= LeftBound)
+		{
+			// CurrentMovementDirection = MovementDirection::Right;
+			FVector NewLocation = FVector(LeftPosition - (Extend.X / 2), Location.Y, Location.Z - RowHeightMovement);
+			// SetActorLocation(NewLocation, false, nullptr, ETeleportType::ResetPhysics);
+		}
+	}
+	else if (CurrentMovementDirection == Right)
+	{
+		float RightPosition = Origin.X + (Extend.X / 2);
+		if (RightPosition >= RightBound)
+		{
+			// CurrentMovementDirection = MovementDirection::Left;
+			FVector NewLocation = FVector(RightPosition - (Extend.X / 2), Location.Y, Location.Z - RowHeightMovement);
+			// SetActorLocation(NewLocation, false, nullptr, ETeleportType::ResetPhysics);
+		}
 	}
 
-	return MostLeft;
-}
+	float Movement = (InitialMovementDirection == Left) ? -1 : 1;
+	// FString Message = "Move: " + FString::SanitizeFloat(Movement);
+	// UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
 
-AActor *AEnemyBlock::GetMostRightEnemy()
-{
-	AActor *MostRight = NULL;
-
-	for (AActor *Enemy : Enemies)
-	{
-		if (MostRight == NULL)
-			MostRight = Enemy;
-		else if (Enemy->GetActorLocation().X > MostRight->GetActorLocation().X)
-			MostRight = Enemy;
+	if(CurrentMovementDirection == Right) {
+		AddMovementInput(FVector(1, 0, 0));
+	} else {
+		AddMovementInput(FVector(-1, 0, 0));
 	}
-
-	return MostRight;
-}
-
-void AEnemyBlock::MoveEnemies_Implementation(float DeltaTime)
-{
-	bool MoveDown = false;
-	float Movement = CurrentMovementSpeed * DeltaTime;
-	FVector MostLeftLocation = MostLeftEnemy->GetActorLocation();
-	FVector MostRightLocation = MostRightEnemy->GetActorLocation();
-
-	if (CurrentMovementDirection == MovementDirection::Left && MostLeftLocation.X <= LeftBound)
-	{
-		CurrentMovementDirection = MovementDirection::Right;
-		MoveDown = true;
-	}
-	else if (CurrentMovementDirection == MovementDirection::Right && MostRightLocation.X >= RightBound)
-	{
-		CurrentMovementDirection = MovementDirection::Left;
-		MoveDown = true;
-	}
-
-	if (CurrentMovementDirection == MovementDirection::Left)
-		Movement *= -1;
-
-	if (CurrentMovementDirection == MovementDirection::Left && MostLeftLocation.X + Movement <= LeftBound)
-		Movement = -(MostLeftLocation.X - LeftBound);
-	else if (CurrentMovementDirection == MovementDirection::Right && MostRightLocation.X + Movement >= RightBound)
-		Movement = RightBound - MostRightLocation.X;
-
-	for (AActor *Enemy : Enemies)
-	{
-		FVector Location = Enemy->GetActorLocation();
-		Location.X += Movement;
-
-		if (MoveDown)
-			Location.Z -= RowHeightMovement;
-
-		Enemy->SetActorLocation(Location);
-	}
-
-	if (MoveDown)
-		CurrentMovementSpeed += MovementSpeedIncrease;
 }
 
 void AEnemyBlock::Tick(float DeltaTime)
@@ -91,55 +63,19 @@ void AEnemyBlock::Tick(float DeltaTime)
 	if (!Alive || MyWorld->IsPaused())
 		return;
 
-	if(GetNetMode() != ENetMode::NM_Client)
-		MoveEnemies(DeltaTime);
+	if (GetNetMode() != ENetMode::NM_Client)
+		MoveBlock_Implementation();
 }
 
-void AEnemyBlock::OnEnemyDestroyed(AActor *Enemy)
+void AEnemyBlock::OnEnemyDestroyed(ABaseEnemy *Enemy)
 {
 	int32 RemovedEnemiesCount = Enemies.RemoveSwap(Enemy);
 
 	if (RemovedEnemiesCount == 0)
 		return;
 
-	if (Enemies.Num() >= 0)
-	{
-		if (Enemy == MostLeftEnemy)
-			MostLeftEnemy = GetMostLeftEnemy();
-		else
-			MostRightEnemy = GetMostRightEnemy();
-	}
-	else
+	if (Enemies.Num() == 0)
 		Alive = false;
 
 	Enemy->OnDestroyed.Remove(MyOnEnemyDestroyed);
-}
-
-void AEnemyBlock::SpawnBlock(FVector SpawnPosition, int Columns, int Rows, TSubclassOf<AActor> EnemyType)
-{
-	float OriginalXStart = SpawnPosition.X;
-
-	for (int32 z = 0; z < Rows; z++)
-	{
-		for (int32 x = 0; x < Columns; x++)
-		{
-			AActor *Enemy = MyWorld->SpawnActor<AActor>(*EnemyType);
-			Enemy->SetActorLocation(SpawnPosition, false, nullptr, ETeleportType::TeleportPhysics);
-
-			MyOnEnemyDestroyed.BindUFunction(this, "OnEnemyDestroyed");
-			Enemy->OnDestroyed.Add(MyOnEnemyDestroyed);
-
-			SpawnPosition.X += ColumnOffset;
-			Enemies.Emplace(Enemy);
-		}
-
-		SpawnPosition.X = OriginalXStart;
-		SpawnPosition.Z -= RowOffset;
-	}
-
-	Enemies.Shrink();
-	MostLeftEnemy = GetMostLeftEnemy();
-	MostRightEnemy = GetMostRightEnemy();
-	Alive = true;
-	CurrentMovementSpeed = MovementSpeed;
 }
