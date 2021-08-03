@@ -12,9 +12,10 @@ void AEnemyBlock::BeginPlay()
 	Super::BeginPlay();
 	MyWorld = GetWorld();
 	CurrentMovementDirection = InitialMovementDirection;
-	FString Message = "Move: " + FString::SanitizeFloat(InitialMovementDirection);
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
 	Alive = true;
+	CharacterMovementComponent = Cast<UCharacterMovementComponent>(GetComponentByClass(UCharacterMovementComponent::StaticClass()));
+	CharacterMovementComponent->GravityScale = 0;
+	CharacterMovementComponent->MovementMode = EMovementMode::MOVE_Flying;
 }
 
 void AEnemyBlock::MoveBlock_Implementation()
@@ -22,38 +23,44 @@ void AEnemyBlock::MoveBlock_Implementation()
 	FVector Origin, Extend;
 	GetActorBounds(true, Origin, Extend, true);
 	auto Location = GetActorLocation();
+	auto BoundsOffset = FVector(
+		Location.X - Origin.X + Extend.X,
+		Location.Y - Origin.Y + Extend.Y,
+		Location.Z - Origin.Z + Extend.Z);
 
+	auto BoundHit = false;
+	FVector NewLocation;
 
 	if (CurrentMovementDirection == Left)
 	{
-		float LeftPosition = Origin.X - (Extend.X / 2);
+		float LeftPosition = Origin.X - Extend.X;
 		if (LeftPosition <= LeftBound)
 		{
-			// CurrentMovementDirection = MovementDirection::Right;
-			FVector NewLocation = FVector(LeftPosition - (Extend.X / 2), Location.Y, Location.Z - RowHeightMovement);
-			// SetActorLocation(NewLocation, false, nullptr, ETeleportType::ResetPhysics);
+			CurrentMovementDirection = MovementDirection::Right;
+			NewLocation = FVector(LeftPosition - BoundsOffset.X, Location.Y, Location.Z - RowHeightMovement);
+			BoundHit = true;
 		}
 	}
 	else if (CurrentMovementDirection == Right)
 	{
-		float RightPosition = Origin.X + (Extend.X / 2);
+		float RightPosition = Origin.X + Extend.X;
 		if (RightPosition >= RightBound)
 		{
-			// CurrentMovementDirection = MovementDirection::Left;
-			FVector NewLocation = FVector(RightPosition - (Extend.X / 2), Location.Y, Location.Z - RowHeightMovement);
-			// SetActorLocation(NewLocation, false, nullptr, ETeleportType::ResetPhysics);
+			CurrentMovementDirection = MovementDirection::Left;
+			NewLocation = FVector(RightPosition - (2 * Extend.X), Location.Y, Location.Z - RowHeightMovement);
+			BoundHit = true;
 		}
 	}
 
-	float Movement = (InitialMovementDirection == Left) ? -1 : 1;
-	// FString Message = "Move: " + FString::SanitizeFloat(Movement);
-	// UE_LOG(LogTemp, Warning, TEXT("%s"), *Message);
-
-	if(CurrentMovementDirection == Right) {
-		AddMovementInput(FVector(1, 0, 0));
-	} else {
-		AddMovementInput(FVector(-1, 0, 0));
+	if (BoundHit)
+	{
+		CharacterMovementComponent->StopMovementImmediately();
+		SetActorLocation(NewLocation, false, nullptr, ETeleportType::None);
+		CharacterMovementComponent->MaxFlySpeed += MovementSpeedIncrease;
 	}
+
+	float Movement = (CurrentMovementDirection == Left) ? -1 : 1;
+	AddMovementInput(FVector(Movement, 0, 0));
 }
 
 void AEnemyBlock::Tick(float DeltaTime)

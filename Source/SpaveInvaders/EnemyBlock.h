@@ -8,6 +8,7 @@
 #include "Math/Vector.h"
 #include "Containers/Array.h"
 #include "Net/UnrealNetwork.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "BaseEnemy.h"
 #include "EnemyBlock.generated.h"
 
@@ -29,7 +30,7 @@ private:
 	UWorld *MyWorld;
 	FScriptDelegate MyOnEnemyDestroyed;
 	TEnumAsByte<MovementDirection> CurrentMovementDirection;
-	float CurrentMovementSpeed = MovementSpeed;
+	UCharacterMovementComponent* CharacterMovementComponent;
 
 public:
 	AEnemyBlock();
@@ -39,9 +40,6 @@ public:
 
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Behaviour")
 	float RightBound = 100;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behaviour")
-	float MovementSpeed = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behaviour")
 	float MovementSpeedIncrease = 50;
