@@ -17,14 +17,6 @@ AMyPlayerCharacter::AMyPlayerCharacter()
 	RightBound = CapsuleRadius;
 }
 
-void AMyPlayerCharacter::PrintString(FString Text)
-{
-	if (!GEngine)
-		return;
-
-	GEngine->AddOnScreenDebugMessage(-1, 0.2f, FColor::Yellow, Text);
-}
-
 // Called when the game starts or when spawned
 void AMyPlayerCharacter::BeginPlay()
 {

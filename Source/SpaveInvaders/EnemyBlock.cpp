@@ -66,6 +66,8 @@ void AEnemyBlock::MoveBlock_Implementation()
 void AEnemyBlock::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (GetNetMode() == ENetMode::NM_Client)
+		return;
 
 	if (!Alive || MyWorld->IsPaused())
 		return;
