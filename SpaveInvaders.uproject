@@ -35,6 +35,10 @@
 		{
 			"Name": "BlastPlugin",
 			"Enabled": true
+		},
+		{
+			"Name": "VOX4U",
+			"Enabled": true
 		}
 	]
 }
