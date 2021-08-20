@@ -6,11 +6,21 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/Actor.h"
 #include "Math/Vector.h"
+#include "Math/UnrealMathUtility.h"
 #include "Containers/Array.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "BaseEnemy.h"
 #include "EnemyBlock.generated.h"
+
+USTRUCT(BlueprintType)
+struct FEnemyColumn
+{
+	GENERATED_BODY()
+
+		UPROPERTY(BlueprintReadOnly)
+		TArray<ABaseEnemy*> Enemies;
+};
 
 UENUM(BlueprintType)
 enum MovementDirection
@@ -25,10 +35,8 @@ class SPAVEINVADERS_API AEnemyBlock : public ACharacter
 	GENERATED_BODY()
 
 private:
-	TArray<ABaseEnemy *> Enemies;
 	bool Alive = false;
-	UWorld *MyWorld;
-	FScriptDelegate MyOnEnemyDestroyed;
+	UWorld* MyWorld;
 	TEnumAsByte<MovementDirection> CurrentMovementDirection;
 	UCharacterMovementComponent* CharacterMovementComponent;
 
@@ -36,23 +44,31 @@ public:
 	AEnemyBlock();
 
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Behaviour")
-	float LeftBound = 0;
+		float LeftBound = 0;
 
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Behaviour")
-	float RightBound = 100;
+		float RightBound = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behaviour")
-	float MovementSpeedIncrease = 50;
+		float MovementSpeedIncrease = 50;
 
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Behaviour")
-	TEnumAsByte<MovementDirection> InitialMovementDirection;
+		TEnumAsByte<MovementDirection> InitialMovementDirection;
 
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Behaviour")
-	float RowHeightMovement = 100;
+		float RowHeightMovement = 100;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly)
+		TArray<FEnemyColumn> EnemyColumns = {};
 
 private:
 	UFUNCTION(Server, Unreliable)
-	void MoveBlock();
+		void MoveBlock();
+
+	UFUNCTION()
+		void OnEnemyDestroyed(AActor* Act);
+
+	ABaseEnemy* SpawnEnemyChild(TSubclassOf<ABaseEnemy> EnemyClass);
 
 protected:
 	virtual void BeginPlay() override;
@@ -60,6 +76,9 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION()
-	void OnEnemyDestroyed(ABaseEnemy *Enemy);
+	UFUNCTION(BlueprintCallable)
+		TArray<FEnemyColumn> SpawnEnemies(int Columns, int Rows, float SpawnOffset, TSubclassOf<ABaseEnemy> EnemyClass);
+
+	UFUNCTION(BlueprintCallable)
+		ABaseEnemy* GetBottomAnyEnemy();
 };

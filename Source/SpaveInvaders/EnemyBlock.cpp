@@ -76,15 +76,78 @@ void AEnemyBlock::Tick(float DeltaTime)
 		MoveBlock_Implementation();
 }
 
-void AEnemyBlock::OnEnemyDestroyed(ABaseEnemy *Enemy)
+ABaseEnemy* AEnemyBlock::SpawnEnemyChild(TSubclassOf<ABaseEnemy> EnemyClass)
 {
-	int32 RemovedEnemiesCount = Enemies.RemoveSwap(Enemy);
+	auto EnemyActor = GetWorld()->SpawnActor(EnemyClass);
+	auto AttRules = FAttachmentTransformRules(EAttachmentRule::KeepRelative, false);
+	EnemyActor->AttachToActor(this, AttRules);
+	return Cast<ABaseEnemy>(EnemyActor);
+}
 
-	if (RemovedEnemiesCount == 0)
-		return;
+void AEnemyBlock::OnEnemyDestroyed(AActor* Act)
+{
+	for (auto Column : this->EnemyColumns)
+	{
+		for (auto Enemy : Column.Enemies)
+		{
+			if (Enemy == Act)
+			{
+				Column.Enemies.RemoveSwap(Enemy);
+				Enemy->OnDestroyed.RemoveAll(this);
+				auto Length = Column.Enemies.Num();
 
-	if (Enemies.Num() == 0)
-		Alive = false;
+				/*if (Length < 0)
+				{
+					this->EnemyColumns.RemoveSwap(Column);
+				}*/
 
-	Enemy->OnDestroyed.Remove(MyOnEnemyDestroyed);
+				/*if (Column.Enemies.Num() == 0)
+					this->EnemyColumns.RemoveSwap(Column);*/
+				return;
+			}
+		}
+	}
+}
+
+TArray<FEnemyColumn> AEnemyBlock::SpawnEnemies(int Columns, int Rows, float SpawnOffset, TSubclassOf<ABaseEnemy> EnemyClass)
+{
+	for (auto Column : this->EnemyColumns)
+		for (auto Enemy : Column.Enemies)
+			Enemy->Destroy();
+
+	this->EnemyColumns = {};
+
+	for (int X = 0; X < Columns; X++)
+	{
+		FEnemyColumn EnemyColumn = FEnemyColumn();
+
+		for (int Z = 0; Z < Rows; Z++)
+		{
+			auto Enemy = SpawnEnemyChild(EnemyClass);
+			FScriptDelegate Delegate;
+			Delegate.BindUFunction(this, "OnEnemyDestroyed");
+			Enemy->OnDestroyed.AddUnique(Delegate);
+
+			EnemyColumn.Enemies.Add(Enemy);
+			FVector ActorOrigin = FVector();
+			FVector ActorBoxExtend = FVector();
+			Enemy->GetActorBounds(false, ActorOrigin, ActorBoxExtend);
+			ActorOrigin.X = SpawnOffset * X;
+			ActorOrigin.Y = 0;
+			ActorOrigin.Z = SpawnOffset * -1 * Z;
+			Enemy->SetActorRelativeLocation(ActorOrigin);
+		}
+
+		EnemyColumns.Add(EnemyColumn);
+	}
+
+	//this->EnemyColumns = EnemyColumns;
+	return EnemyColumns;
+}
+
+ABaseEnemy* AEnemyBlock::GetBottomAnyEnemy()
+{
+	//auto Length = this->EnemyColumns.Num();
+	//RandRange(0, Length);
+	return NULL;
 }

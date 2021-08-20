@@ -1,5 +1,6 @@
 Content/StarterContent
 .vscode/
+.vs/
 
 # Compiled Object files
 *.slo
